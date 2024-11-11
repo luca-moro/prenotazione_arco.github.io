@@ -45,7 +45,7 @@ interface Giorno {
 const password = "LUCA"; // Define the correct password here
 
 const CalendarioPrenotazione = () => {
-  const [giorni, setGiorni] = usePersistState<Giorno[]>(
+  const [giorni, setGiorni] = usePersistState(
     [
       {
         nome: "Lunedì",
