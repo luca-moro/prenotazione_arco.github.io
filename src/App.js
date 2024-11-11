@@ -96,7 +96,7 @@ const CalendarioPrenotazione = () => {
   useEffect(() => {
     const unsubscribe = db.collection('sharedVariables').doc('giorni')
       .onSnapshot((doc) => {
-        setSharedState(doc.data()?.value);
+        setGiorni(doc.data()?.value);
       });
 
     return () => unsubscribe(); // Cleanup listener on unmount
