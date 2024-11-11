@@ -1,30 +1,31 @@
 import { useMemo, useState, useEffect } from "react";
 import { Calendar, X, Pause, Plus, Minus } from "lucide-react";
+import { db } from './firebase';
 
-function usePersistState<T>(
-  initial_value: T,
-  id: string
-): [T, (new_state: T) => void] {
-  // Set initial value
-  const _initial_value = useMemo(() => {
-    const local_storage_value_str = localStorage.getItem("state:" + id);
-    // If there is a value stored in localStorage, use that
-    if (local_storage_value_str) {
-      return JSON.parse(local_storage_value_str);
-    }
-    // Otherwise use initial_value that was passed to the function
-    return initial_value;
-  }, []);
-
-  const [state, setState] = useState(_initial_value);
-
-  useEffect(() => {
-    const state_str = JSON.stringify(state); // Stringified state
-    localStorage.setItem("state:" + id, state_str); // Set stringified state as item in localStorage
-  }, [state]);
-
-  return [state, setState];
-}
+//function usePersistState<T>(
+//  initial_value: T,
+//  id: string
+//): [T, (new_state: T) => void] {
+//  // Set initial value
+//  const _initial_value = useMemo(() => {
+//    const local_storage_value_str = localStorage.getItem("state:" + id);
+//    // If there is a value stored in localStorage, use that
+//    if (local_storage_value_str) {
+//      return JSON.parse(local_storage_value_str);
+//    }
+//    // Otherwise use initial_value that was passed to the function
+//    return initial_value;
+//  }, []);
+//
+//  const [state, setState] = useState(_initial_value);
+//
+//  useEffect(() => {
+//    const state_str = JSON.stringify(state); // Stringified state
+//    localStorage.setItem("state:" + id, state_str); // Set stringified state as item in localStorage
+//  }, [state]);
+//
+//  return [state, setState];
+//}
 
 interface Prenotazione {
   nome: string;
@@ -45,7 +46,7 @@ interface Giorno {
 const password = "LUCA"; // Define the correct password here
 
 const CalendarioPrenotazione = () => {
-  const [giorni, setGiorni] = usePersistState(
+  const [giorni, setGiorni] = useState(
     [
       {
         nome: "Lunedì",
@@ -89,9 +90,17 @@ const CalendarioPrenotazione = () => {
           },
         ],
       },
-    ],
-    "giorni"
-  );
+    ]);
+
+  // Fetch shared state on load
+  useEffect(() => {
+    const unsubscribe = db.collection('sharedVariables').doc('giorni')
+      .onSnapshot((doc) => {
+        setSharedState(doc.data()?.value);
+      });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
 
   const [nome, setNome] = useState("");
   const [giornoSelezionato, setGiornoSelezionato] = useState("");
@@ -109,6 +118,7 @@ const CalendarioPrenotazione = () => {
               giorno: giornoSelezionato,
               turno: turnoSelezionato,
             });
+            db.collection('sharedVariables').doc('giorni').set({ value: giorni });
             setGiorni([...giorni]);
             setNome("");
           } else if (turno.sospeso) {
