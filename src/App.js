@@ -1,6 +1,27 @@
 import { useMemo, useState, useEffect } from "react";
 import { Calendar, X, Pause, Plus, Minus } from "lucide-react";
-import { db } from './firebase';
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc, addDoc } from "firebase/firestore";
+import { getDatabase, ref, onValue, set, push } from 'firebase/database';
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyARiqtsVR7cmX6iU3cD0P7LvvWfp4zv4To",
+  authDomain: "prenotazione-arco.firebaseapp.com",
+  projectId: "prenotazione-arco",
+  storageBucket: "prenotazione-arco.firebasestorage.app",
+  messagingSenderId: "308635909661",
+  appId: "1:308635909661:web:ea5396b2903d880f30d0f4"
+};
+
+// Initialize Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+
+// Initialize Firestore
+const db = getDatabase(firebaseApp);
+
+const giorniRef = ref(db, 'giorni'); // Reference to the 'users' node
 
 //function usePersistState<T>(
 //  initial_value: T,
@@ -26,6 +47,18 @@ import { db } from './firebase';
 //
 //  return [state, setState];
 //}
+
+// Function to update the shared state in Firestore
+//const updateSharedState = async (newValue) => {
+//  try {
+//    await setDoc(doc(db, "sharedStateCollection", "sharedStateDocument"), {
+//      value: newValue,
+//    });
+//    console.log("Shared state updated!");
+//  } catch (error) {
+//    console.error("Error updating shared state: ", error);
+//  }
+//};
 
 interface Prenotazione {
   nome: string;
@@ -92,21 +125,43 @@ const CalendarioPrenotazione = () => {
       },
     ]);
 
-  // Fetch shared state on load
   useEffect(() => {
-    const unsubscribe = db.collection('sharedVariables').doc('giorni')
-      .onSnapshot((doc) => {
-        setGiorni(doc.data()?.value);
-      });
-
-    return () => unsubscribe(); // Cleanup listener on unmount
+    onValue(giorniRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setGiorni(Object.values(data));
+      }
+    });
   }, []);
+//  useEffect(() => {
+//  // Define an async function to fetch data
+//  const fetchSharedState = async () => {
+//    try {
+//      // Reference the document where the shared state is stored
+//      const docRef = collection(db, "sharedStateCollection", "sharedStateDocument");
+//      const docSnap = await getDoc(docRef);
+//
+//      if (docSnap.exists()) {
+//        // Set the shared state to the document's data
+//        setGiorni(docSnap.data().value);
+//      } else {
+//        console.log("No such document!");
+//     }
+//    } catch (error) {
+//      console.error("Error fetching shared state: ", error);
+//    }
+//  };
+//
+//    // Call the fetch function
+//    fetchSharedState();
+//  }, []); // Empty dependency array ensures this runs only on mount
 
   const [nome, setNome] = useState("");
   const [giornoSelezionato, setGiornoSelezionato] = useState("");
   const [turnoSelezionato, setTurnoSelezionato] = useState("");
 
-  const handlePrenotazione = () => {
+  const handlePrenotazione = (event) => {
+    event.preventDefault();
     if (nome && giornoSelezionato && turnoSelezionato) {
       const giorno = giorni.find((g) => g.nome === giornoSelezionato);
       if (giorno) {
@@ -118,7 +173,7 @@ const CalendarioPrenotazione = () => {
               giorno: giornoSelezionato,
               turno: turnoSelezionato,
             });
-            db.collection('sharedVariables').doc('giorni').set({ value: giorni });
+            push(giorniRef, giorni);
             setGiorni([...giorni]);
             setNome("");
           } else if (turno.sospeso) {
