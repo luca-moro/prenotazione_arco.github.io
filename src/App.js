@@ -1,8 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { Calendar, X, Pause, Plus, Minus } from "lucide-react";
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { collection, doc, getDocs, setDoc, addDoc } from "firebase/firestore";
+import { getFirestore, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, setDoc, addDoc, getDoc } from "firebase/firestore";
 import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 
 
@@ -12,42 +12,56 @@ const firebaseConfig = {
   projectId: "prenotazione-arco",
   storageBucket: "prenotazione-arco.firebasestorage.app",
   messagingSenderId: "308635909661",
-  appId: "1:308635909661:web:ea5396b2903d880f30d0f4"
+  appId: "1:308635909661:web:ea5396b2903d880f30d0f4",
+  databaseURL: "https://prenotazione-arco-default-rtdb.europe-west1.firebasedatabase.app" // Updated URL
 };
 
 // Initialize Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
 // Initialize Firestore
-const db = getDatabase(firebaseApp);
+const db = getFirestore(firebaseApp);
 
-const giorniRef = ref(db, 'giorni'); // Reference to the 'users' node
+async function updateGiorniDocument(newData) {
+  // Reference the specific document you want to update
+  const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
+  const updateData = {
+    campo: JSON.stringify(newData)
+  }
 
-//function usePersistState<T>(
-//  initial_value: T,
-//  id: string
-//): [T, (new_state: T) => void] {
-//  // Set initial value
-//  const _initial_value = useMemo(() => {
-//    const local_storage_value_str = localStorage.getItem("state:" + id);
-//    // If there is a value stored in localStorage, use that
-//    if (local_storage_value_str) {
-//      return JSON.parse(local_storage_value_str);
-//    }
-//    // Otherwise use initial_value that was passed to the function
-//    return initial_value;
-//  }, []);
-//
-//  const [state, setState] = useState(_initial_value);
-//
-//  useEffect(() => {
-//    const state_str = JSON.stringify(state); // Stringified state
-//    localStorage.setItem("state:" + id, state_str); // Set stringified state as item in localStorage
-//  }, [state]);
-//
-//  return [state, setState];
-//}
+  try {
+    // Update the document with the new data
+    await updateDoc(docRef, updateData);
+    console.log("Document successfully updated!");
+  } catch (error) {
+    console.error("Error updating document: ", error);
+  }
+}
 
+async function fetchGiorniDocument() {
+  // Define a reference to the document
+  const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
+
+  // Fetch the document
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+      return JSON.parse(docSnap.data()); // Document data
+    } else {
+      console.log("No such document!");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error getting document:", error);
+    return null;
+  }
+}
+
+
+
+
+//////JSON.parse(docSnap)
 // Function to update the shared state in Firestore
 //const updateSharedState = async (newValue) => {
 //  try {
@@ -79,86 +93,79 @@ interface Giorno {
 const password = "LUCA"; // Define the correct password here
 
 const CalendarioPrenotazione = () => {
-  const [giorni, setGiorni] = useState(
-    [
-      {
-        nome: "Lunedì",
-        turni: [
-          { nome: "Primo turno", posti: 10, prenotazioni: [], sospeso: false },
-          {
-            nome: "Secondo turno",
-            posti: 10,
-            prenotazioni: [],
-            sospeso: false,
-          },
-        ],
-      },
-      {
-        nome: "Mercoledì",
-        turni: [
-          { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
-          {
-            nome: "Secondo turno",
-            posti: 20,
-            prenotazioni: [],
-            sospeso: false,
-          },
-        ],
-      },
-      {
-        nome: "Giovedì",
-        turni: [
-          { nome: "Turno unico", posti: 20, prenotazioni: [], sospeso: false },
-        ],
-      },
-      {
-        nome: "Sabato",
-        turni: [
-          { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
-          {
-            nome: "Secondo turno",
-            posti: 20,
-            prenotazioni: [],
-            sospeso: false,
-          },
-        ],
-      },
-    ]);
+//  fetchGiorniDocument()
+
+  const [giorni, setGiorni] = useState([
+    {
+      nome: "Lunedì",
+      turni: [
+        { nome: "Primo turno", posti: 10, prenotazioni: [], sospeso: false },
+        { nome: "Secondo turno", posti: 10, prenotazioni: [], sospeso: false },
+      ],
+    },
+    {
+      nome: "Mercoledì",
+      turni: [
+        { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
+        { nome: "Secondo turno", posti: 20, prenotazioni: [], sospeso: false },
+      ],
+    },
+    {
+      nome: "Giovedì",
+      turni: [
+        { nome: "Turno unico", posti: 20, prenotazioni: [], sospeso: false },
+      ],
+    },
+    {
+      nome: "Sabato",
+      turni: [
+        { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
+        { nome: "Secondo turno", posti: 20, prenotazioni: [], sospeso: false },
+      ],
+    },
+  ]);
+
+  const [giorniData, setGiorniData] = useState(null);
 
   useEffect(() => {
-    onValue(giorniRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        setGiorni(Object.values(data));
-      }
-    });
+    const fetchData = async () => {
+      const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
+
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setGiorniData(docSnap.data().campo);
+        } else {
+          console.log("No such document!");
+        }
+
+    };
+
+    fetchData();
   }, []);
+
 //  useEffect(() => {
-//  // Define an async function to fetch data
-//  const fetchSharedState = async () => {
-//    try {
-//      // Reference the document where the shared state is stored
-//      const docRef = collection(db, "sharedStateCollection", "sharedStateDocument");
+//    // Fetch the document on component mount
+//    const fetchData = async () => {
+//      const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
 //      const docSnap = await getDoc(docRef);
-//
 //      if (docSnap.exists()) {
-//        // Set the shared state to the document's data
-//        setGiorni(docSnap.data().value);
+//        setGiorni(docSnap.data()); // Store document data in state
+//        localStorage.setItem("state:lol", docSnap.data());
 //      } else {
 //        console.log("No such document!");
-//     }
-//    } catch (error) {
-//      console.error("Error fetching shared state: ", error);
-//    }
-//  };
+//      }
 //
-//    // Call the fetch function
-//    fetchSharedState();
-//  }, []); // Empty dependency array ensures this runs only on mount
+//    };
+//
+//    fetchData();
+//  }, []);
+
 
   const [nome, setNome] = useState("");
   const [giornoSelezionato, setGiornoSelezionato] = useState("");
   const [turnoSelezionato, setTurnoSelezionato] = useState("");
+
+  const giorniRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
 
   const handlePrenotazione = (event) => {
     event.preventDefault();
@@ -173,8 +180,8 @@ const CalendarioPrenotazione = () => {
               giorno: giornoSelezionato,
               turno: turnoSelezionato,
             });
-            push(giorniRef, giorni);
             setGiorni([...giorni]);
+            updateGiorniDocument(giorni);
             setNome("");
           } else if (turno.sospeso) {
             alert("Allenamento sospeso!");
@@ -270,6 +277,12 @@ const CalendarioPrenotazione = () => {
 
   return (
     <div className="container mx-auto p-4 bg-orange-100 rounded-2xl shadow-2xl">
+      <h1>Giorni Document Data</h1>
+      {giorniData ? (
+        <pre>{JSON.stringify(giorniData, null, 2)}</pre>
+      ) : (
+        <p>Loading...</p>
+      )}
       <h1 className="text-3xl font-bold mb-4 text-black">
         Calendario Prenotazione
       </h1>
