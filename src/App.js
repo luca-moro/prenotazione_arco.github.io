@@ -26,7 +26,7 @@ async function updateGiorniDocument(newData) {
   // Reference the specific document you want to update
   const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
   const updateData = {
-    campo: JSON.stringify(newData)
+    campo: '{"lista":'+JSON.stringify(newData)+'}'
   }
 
   try {
@@ -47,7 +47,7 @@ async function fetchGiorniDocument() {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       console.log("Document data:", docSnap.data());
-      return JSON.parse(docSnap.data()); // Document data
+      return JSON.parse(docSnap.data().campo).lista; // Document data
     } else {
       console.log("No such document!");
       return null;
@@ -99,7 +99,7 @@ const CalendarioPrenotazione = () => {
     {
       nome: "Lunedì",
       turni: [
-        { nome: "Primo turno", posti: 10, prenotazioni: [], sospeso: false },
+        { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
         { nome: "Secondo turno", posti: 10, prenotazioni: [], sospeso: false },
       ],
     },
@@ -133,7 +133,8 @@ const CalendarioPrenotazione = () => {
 
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setGiorniData(docSnap.data().campo);
+          setGiorni(JSON.parse(docSnap.data().campo).lista);
+          setGiorniData(JSON.parse(docSnap.data().campo).lista);
         } else {
           console.log("No such document!");
         }
@@ -277,12 +278,6 @@ const CalendarioPrenotazione = () => {
 
   return (
     <div className="container mx-auto p-4 bg-orange-100 rounded-2xl shadow-2xl">
-      <h1>Giorni Document Data</h1>
-      {giorniData ? (
-        <pre>{JSON.stringify(giorniData, null, 2)}</pre>
-      ) : (
-        <p>Loading...</p>
-      )}
       <h1 className="text-3xl font-bold mb-4 text-black">
         Calendario Prenotazione
       </h1>
@@ -293,7 +288,7 @@ const CalendarioPrenotazione = () => {
           onChange={(e) => setGiornoSelezionato(e.target.value)}
         >
           <option value="">Seleziona giorno</option>
-          {giorni.map((giorno) => (
+          {Array.isArray(giorni) && giorni.map((giorno) => (
             <option key={giorno.nome} value={giorno.nome}>
               {giorno.nome}
             </option>
@@ -305,7 +300,7 @@ const CalendarioPrenotazione = () => {
           onChange={(e) => setTurnoSelezionato(e.target.value)}
         >
           <option value="">Seleziona turno</option>
-          {giorni
+          {Array.isArray(giorni) && giorni
             .find((g) => g.nome === giornoSelezionato)
             ?.turni.map((turno) => (
               <option key={turno.nome} value={turno.nome}>
@@ -328,10 +323,10 @@ const CalendarioPrenotazione = () => {
         </button>
       </div>
       <div className="flex flex-col">
-        {giorni.map((giorno) => (
+        {Array.isArray(giorni) && giorni.map((giorno) => (
           <div key={giorno.nome} className="mb-4 bg-white rounded p-4">
             <h2 className="text-2xl font-bold">{giorno.nome}</h2>
-            {giorno.turni.map((turno) => (
+            {Array.isArray(giorni) && giorno.turni.map((turno) => (
               <div key={turno.nome} className="mb-4">
                 <h3 className="text-xl font-bold">{turno.nome}</h3>
                 {turno.sospeso ? (
@@ -360,7 +355,7 @@ const CalendarioPrenotazione = () => {
                   <Minus className="w-4 h-4" />
                 </button>
                 <ul>
-                  {turno.prenotazioni.map((prenotazione, index) => (
+                  {Array.isArray(giorni) && turno.prenotazioni.map((prenotazione, index) => (
                     <li key={index} className="flex justify-between">
                       <span>{prenotazione.nome}</span>
                       <button
