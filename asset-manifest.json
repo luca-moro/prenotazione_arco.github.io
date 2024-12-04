@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/prenotazione_arco.github.io/static/css/main.fdf8bcb1.css",
-    "main.js": "/prenotazione_arco.github.io/static/js/main.b533d626.js",
+    "main.css": "/prenotazione_arco.github.io/static/css/main.ae9c917a.css",
+    "main.js": "/prenotazione_arco.github.io/static/js/main.4b5cb951.js",
     "static/js/453.c057d497.chunk.js": "/prenotazione_arco.github.io/static/js/453.c057d497.chunk.js",
     "static/media/logo192.png": "/prenotazione_arco.github.io/static/media/logo192.2bdc9c0d11a43d5fe48c.png",
     "index.html": "/prenotazione_arco.github.io/index.html",
-    "main.fdf8bcb1.css.map": "/prenotazione_arco.github.io/static/css/main.fdf8bcb1.css.map",
-    "main.b533d626.js.map": "/prenotazione_arco.github.io/static/js/main.b533d626.js.map",
+    "main.ae9c917a.css.map": "/prenotazione_arco.github.io/static/css/main.ae9c917a.css.map",
+    "main.4b5cb951.js.map": "/prenotazione_arco.github.io/static/js/main.4b5cb951.js.map",
     "453.c057d497.chunk.js.map": "/prenotazione_arco.github.io/static/js/453.c057d497.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.fdf8bcb1.css",
-    "static/js/main.b533d626.js"
+    "static/css/main.ae9c917a.css",
+    "static/js/main.4b5cb951.js"
   ]
 }
