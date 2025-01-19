@@ -141,18 +141,36 @@ nav a:hover {
 
 /* Hero Section */
 .hero {
-  padding: 50px 20px;
+  text-align: center; /* Center the entire section */
+  padding: 20px;
   background-color: #4caf50;
   color: white;
 }
 
 .hero h1 {
   font-size: 36px;
-  margin: 20px 0;
+  margin-bottom: 20px; /* Add spacing below the heading */
 }
 
-.hero p {
-  font-size: 18px;
+.schedule {
+  display: grid; /* Use grid for alignment */
+  gap: 10px; /* Add spacing between lines */
+  justify-content: center; /* Center the entire grid */
+}
+
+.line {
+  display: grid; /* Each line is a grid */
+  grid-template-columns: 100px auto; /* Define fixed width for day and flexible width for details */
+  text-align: left; /* Align text to the left */
+}
+
+.line .day {
+  font-weight: bold;
+  padding-right: 10px; /* Add spacing between day and details */
+}
+
+.line .details {
+  text-align: justify; /* Justify the details for readability */
 }
 
 .primary-button {
@@ -197,8 +215,8 @@ nav a:hover {
 
 /* Booking Section */
 .booking-section {
-  width: 80%;
-  margin: 20px auto;
+  width: 90%;
+  margin: 5px auto;
   background: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -214,7 +232,17 @@ nav a:hover {
   border-collapse: collapse;
 }
 
-.booking-table th,
+.booking-table th {
+  text-align: center;
+  padding: 10px;
+  border-bottom: 2px solid #ddd;
+}
+
+.sorting-th:hover {
+  cursor: pointer;
+  background-color: #3d8b40;
+}
+
 .booking-table td {
   border: 1px solid #ddd;
   padding: 8px;
@@ -229,10 +257,24 @@ nav a:hover {
   color: #999;
 }
 
+.delete-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.delete-button:hover {
+  background-color: #c0392b;
+}
+
 /* Form Section */
 .form-section {
-  width: 80%;
-  margin: 20px auto;
+  width: 90%;
+  margin: 5px auto;
   background: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
@@ -252,11 +294,17 @@ nav a:hover {
   margin: auto;
 }
 
-.booking-form input
+.booking-form input {
+  align-items: center;
+  padding: 10px;
+  font-size: 16px;
+  border: 2px solid #ccc;
+  border-radius: 5px;
+}
+
 .booking-form select {
   padding: 10px;
   font-size: 16px;
-  width: 250px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
@@ -273,6 +321,64 @@ nav a:hover {
 
 .booking-form button:hover {
   background-color: #45a049;
+}
+
+.suspend-button {
+  margin: 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.suspend-button.suspend {
+  background-color: #e74c3c; /* Red for suspend */
+}
+
+.suspend-button.resume {
+  background-color: #4caf50; /* Green for resume */
+}
+
+.suspend-button:hover {
+  opacity: 0.9;
+}
+
+.posti-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.posti-controls button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  background-color: #f0f0f0;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.posti-controls button:hover {
+  background-color: #e0e0e0;
+}
+
+.posti-controls button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.delete-subs button{
+  background-color: #e74c3c;
+}
+
+.form-input-admin {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0;
 }
 
 /* Footer */

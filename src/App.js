@@ -24,12 +24,32 @@ const firebaseApp = initializeApp(firebaseConfig);
 // Initialize Firestore
 const db = getFirestore(firebaseApp);
 
+async function fetchGiorniDocument() {
+  // Define a reference to the document
+  const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
+
+  // Fetch the document
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+      return JSON.parse(docSnap.data().campo); // Document data
+    } else {
+      console.log("No such document!");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error getting document:", error);
+    return null;
+  }
+}
+
 async function updateGiorniDocument(newData) {
   // Reference the specific document you want to update
   const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
   const updateData = {
-    campo: '{"lista":'+JSON.stringify(newData)+'}'
-  }
+    campo: JSON.stringify(newData),
+  };
 
   try {
     // Update the document with the new data
@@ -57,48 +77,119 @@ interface Giorno {
 }
 
 const initialData = {
-    'Lunedì':{
-      nome: "Lunedì",
-      turni: [
-        { nome: "Primo turno", posti: 20, prenotazioni: [{nome:"LLLL"}], sospeso: false },
-        { nome: "Secondo turno", posti: 10, prenotazioni: [], sospeso: false },
-      ]
-    },
-    'Mercoledì':{
-      nome: "Mercoledì",
-      turni: [
-        { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
-        { nome: "Secondo turno", posti: 20, prenotazioni: [], sospeso: false },
-      ]
-    },
-    'Giovedì':{
-      nome: "Giovedì",
-      turni: [
-        { nome: "Primo turno", posti: 0, prenotazioni: [], sospeso: false },
-        { nome: "Secondo turno", posti: 20, prenotazioni: [], sospeso: false },
-      ]
-    },
-    'Sabato':{
-      nome: "Sabato",
-      turni: [
-        { nome: "Primo turno", posti: 20, prenotazioni: [], sospeso: false },
-        { nome: "Secondo turno", posti: 20, prenotazioni: [], sospeso: false },
-      ]
-    }
-  };
+	"Lunedì": {
+		"nome": "Lunedì",
+		"turni": [
+			{
+				"nome": "Primo turno",
+				"posti": 20,
+				"prenotazioni": [
+					{
+						"nome": "tytttt",
+						"turno": "Primo turno"
+					}
+				],
+				"sospeso": false
+			},
+			{
+				"nome": "Secondo turno",
+				"posti": 10,
+				"prenotazioni": [
+					{
+						"nome": "lucaaaa",
+						"turno": "Secondo Turno"
+					},
+					{
+						"nome": "oooooooo",
+						"turno": "Secondo turno"
+					}
+				],
+				"sospeso": false
+			}
+		]
+	},
+	"Mercoledì": {
+		"nome": "Mercoledì",
+		"turni": [
+			{
+				"nome": "Primo turno",
+				"posti": 20,
+				"prenotazioni": [],
+				"sospeso": false
+			},
+			{
+				"nome": "Secondo turno",
+				"posti": 20,
+				"prenotazioni": [],
+				"sospeso": false
+			}
+		]
+	},
+	"Giovedì": {
+		"nome": "Giovedì",
+		"turni": [
+			{
+				"nome": "Turno Unico",
+				"posti": 0,
+				"prenotazioni": [],
+				"sospeso": false
+			}
+		]
+	},
+	"Sabato": {
+		"nome": "Sabato",
+		"turni": [
+			{
+				"nome": "Primo turno",
+				"posti": 20,
+				"prenotazioni": [],
+				"sospeso": false
+			},
+			{
+				"nome": "Secondo turno",
+				"posti": 20,
+				"prenotazioni": [],
+				"sospeso": false
+			}
+		]
+	}
+};
 
-const adminpassword = "LUCA"; // Define the correct password here
+//const adminpassword = "LUCA"; // Define the correct password here
+async function fetchPassword(docId) {
+  const docRef = doc(db, 'giorni', docId);
+
+  // Fetch the document
+  try {
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data().password; // Document data
+    } else {
+      console.log("No such document!");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error getting document:", error);
+    return null;
+  }
+}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState("");
 
-  const correctPassword = "luca"; // Set your desired password
+//  const correctPassword = "luca"; // Set your desired password
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (password === correctPassword) {
+    // Fetch the stored password from Firestore
+    const loginPassword = await fetchPassword("loginpassword");
+    const adminpassword = await fetchPassword("adminpassword");
+    if (password === loginPassword) {
       setIsLoggedIn(true);
+    } else if (password === adminpassword) {
+      setIsAdmin(true)
     } else {
       alert("Incorrect password. Please try again.");
     }
@@ -111,8 +202,35 @@ function App() {
 
   const [data, setData] = useState(initialData);
   const [activeTab, setActiveTab] = useState('Lunedì');
-  const [formInput, setFormInput] = useState({turno: "", nome: "" });
+  const [formInput, setFormInput] = useState({turno: "Primo Turno", nome: "" });
+  const [formAllenatoreInput, setFormAllenatoreInput] = useState("");
   const [weekDates, setWeekDates] = useState({});
+  const [sortConfig, setSortConfig] = useState({ key: "id", direction: "asc" }); // Sorting state
+
+  // Update the default value of `formInput.turno` based on `activeTab`
+  useEffect(() => {
+    if (activeTab === "Giovedì") {
+      setFormInput((prev) => ({ ...prev, turno: "Turno Unico" }));
+    } else {
+      setFormInput((prev) => ({ ...prev, turno: "Primo Turno" }));
+    }
+  }, [activeTab]); // Runs whenever `activeTab` changes
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
+
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setData(JSON.parse(docSnap.data().campo));
+        } else {
+          console.log("No such document!");
+        }
+
+    };
+
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const getNextDateForDay = (dayName) => {
@@ -135,30 +253,210 @@ function App() {
     setWeekDates(dates);
   }, []);
 
+  function postiRimasti(totale, usati) {
+    return totale - usati;
+  };
+
   // Handle form submission
   const handleFormSubmit = (e) => {
     e.preventDefault();
+
+    // Ensure name is not empty
     if (formInput.nome.trim() === "") return;
 
-    const newBooking = {
-      nome: formInput.name,
-      turno: formInput.turno
-    };
+    // Extract the current turn
+    const { turno, nome } = formInput;
 
-    setData((prevData) => ({
-      ...prevData,
-      [activeTab]: [...prevData[activeTab], newBooking],
-    }));
+    // Update the data state
+    setData((prevData) => {
+      const updatedDay = { ...prevData[activeTab] }; // Clone the active day
 
-    setFormInput({ turno: "", nome: "" });
+      updatedDay.turni = updatedDay.turni.map((turnoItem) => {
+        if (turnoItem.nome === turno) {
+          if (turnoItem.prenotazioni.length < turnoItem.posti && !turnoItem.sospeso) {
+            return {
+              ...turnoItem,
+              prenotazioni: [
+                ...turnoItem.prenotazioni,
+                { nome: nome, turno: turno }, // Add the new booking
+              ],
+            };
+          } else if (turnoItem.sospeso) {
+            alert("Allenamento sospeso!");
+          } else {
+            alert("Posti esauriti!");
+          }
+        }
+        return turnoItem; // Keep other turns unchanged
+      });
+
+      const updatedData = {
+        ...prevData,
+        [activeTab]: updatedDay, // Update the active day
+      };
+
+      updateGiorniDocument(updatedData);
+
+      return updatedData;
+    });
+
+    // Reset the form input
+    setFormInput({ turno: "Primo Turno", nome: "" });
   };
 
-  if (!isLoggedIn) {
+  // Handle form Allenatore submission
+  const handleFormAllenatoreSubmit = (e) => {
+    e.preventDefault();
+
+    // Ensure name is not empty
+    if (formAllenatoreInput.trim() === "") return;
+
+    // Update the data state
+    setData((prevData) => {
+      const updatedDay = { ...prevData[activeTab] }; // Clone the active day
+
+      updatedDay.turni = updatedDay.turni.map((turnoItem) => {
+        return {
+          ...turnoItem,
+          allenatore: formAllenatoreInput,
+        }; // Keep other turns unchanged
+      });
+
+      const updatedData = {
+        ...prevData,
+        [activeTab]: updatedDay, // Update the active day
+      };
+
+      updateGiorniDocument(updatedData);
+
+      return updatedData;
+    });
+
+    // Reset the form input
+    setFormAllenatoreInput("");
+  };
+
+   // Delete a record
+  const handleDelete = (day, turnoName, nomeToDelete) => {
+    const isConfirmed = window.confirm(
+      "Sei sicuro di voler CANCELLARE la prenotazione per " + nomeToDelete + "?"
+    );
+
+    if (!isConfirmed) return;
+
+    setData((prevData) => {
+      const updatedDay = { ...prevData[day] }; // Clone the specific day
+      updatedDay.turni = updatedDay.turni.map((turno) => {
+        if (turno.nome === turnoName) {
+          return {
+            ...turno,
+            prenotazioni: turno.prenotazioni.filter((prenotazione) => prenotazione.nome !== nomeToDelete),
+          };
+        }
+        return turno;
+      });
+
+      const updatedData = {
+        ...prevData,
+        [day]: updatedDay, // Update only the relevant day
+      };
+
+      updateGiorniDocument(updatedData);
+
+      return updatedData;
+    });
+  };
+
+    // Suspend or resume a training turn
+  const handleSuspendToggle = async (day, turnoName) => {
+    const enteredPassword = window.prompt(
+      "Inserisci la password per sospendere l'allenamento:"
+    );
+
+    const adminpassword = await fetchPassword("adminpassword");
+
+    if (enteredPassword === adminpassword) {
+      setData((prevData) => {
+        const updatedDay = { ...prevData[day] };
+        updatedDay.turni = updatedDay.turni.map((turno) => {
+          if (turno.nome === turnoName) {
+            return { ...turno, sospeso: !turno.sospeso }; // Toggle suspension
+          }
+          return turno;
+        });
+
+        const updatedData = {
+          ...prevData,
+          [day]: updatedDay,
+        };
+
+        updateGiorniDocument(updatedData);
+        return updatedData;
+      });
+    } else {
+      alert("Password sbagliata, impossibile procedere");
+    }
+  };
+
+  // Update available spots for a turn
+  const handleUpdatePosti = (day, turnoName, newPosti) => {
+    setData((prevData) => {
+      const updatedDay = { ...prevData[day] };
+      updatedDay.turni = updatedDay.turni.map((turno) => {
+        if (turno.nome === turnoName) {
+          return { ...turno, posti: newPosti }; // Update posti
+        }
+        return turno;
+      });
+
+      const updatedData = {
+        ...prevData,
+        [day]: updatedDay,
+      };
+
+      updateGiorniDocument(updatedData);
+      return updatedData;
+    });
+
+  };
+
+  // Delete all subs for that turn
+  const handleDeleteAllSubs = async (day, turnoName) => {
+    const enteredPassword = window.prompt(
+      "Inserisci la password per cancellare tutti gli iscritti di " + day
+    );
+
+    const adminpassword = await fetchPassword("adminpassword");
+
+    if (enteredPassword === adminpassword) {
+      setData((prevData) => {
+        const updatedDay = { ...prevData[day] };
+        updatedDay.turni = updatedDay.turni.map((turno) => {
+          if (turno.nome === turnoName) {
+            return { ...turno, prenotazioni: [] };
+          }
+          return turno;
+        });
+
+        const updatedData = {
+          ...prevData,
+          [day]: updatedDay,
+        };
+
+        updateGiorniDocument(updatedData);
+        return updatedData;
+      });
+    } else {
+      alert("Password sbagliata, impossibile procedere");
+    }
+  };
+
+  if (!isLoggedIn && !isAdmin) {
     return (
       <div className="login-page">
         <form className="login-form" onSubmit={handleLogin}>
           <img src={logo} alt="Logo" className="login-logo" />
-          <h2>Login to Acieri Valconca</h2>
+          <h2>Login to Arcieri Valconca</h2>
           <input
             type="password"
             placeholder="Inserisci Password"
@@ -173,544 +471,320 @@ function App() {
       </div>
     );
   }
+  else if (isAdmin) {
+    return (
+      <div className="App">
+        {/* Navbar */}
+        <header className="navbar">
+          <div className="navbar-left">
+            <img src={logo} alt="Logo" className="navbar-logo" />
+            <div className="logo-text">Arcieri Valconca</div>
+          </div>
+          <button className="hamburger" onClick={toggleMenu}>
+            ☰
+          </button>
+          <nav className={`navbar-menu ${isMenuOpen ? "open" : ""}`}>
+            <a href="Segnapunti_10_vole.pdf" download="Segnapunti_10_vole.pdf">Download File Segnapunti</a>
+          </nav>
+        </header>
 
-  return (
-    <div className="App">
-      {/* Navbar */}
-      <header className="navbar">
-        <div className="navbar-left">
-          <img src={logo} alt="Logo" className="navbar-logo" />
-          <div className="logo-text">Acieri Valconca</div>
+        {/* Hero Section */}
+        <section className="hero">
+          <h1>Prenota Allenamento</h1>
+          <div className="schedule">
+            <div className="line">
+              <span className="day"><strong>Lunedì</strong>:</span>
+              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
+            </div>
+            <div className="line">
+              <span className="day"><strong>Mercoledì</strong>:</span>
+              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
+            </div>
+            <div className="line">
+              <span className="day"><strong>Giovedì</strong>:</span>
+              <span className="details">Turno Unico [20:00 - 21:30]</span>
+            </div>
+            <div className="line">
+              <span className="day"><strong>Sabato</strong>:</span>
+              <span className="details">Primo Turno [15:30 - 17:00], Secondo Turno [17:00 - 18:30]</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Tabs Section */}
+        <div className="tabs">
+          {Object.keys(data).map((day) => (
+            <button
+              key={day}
+              className={`tab-button ${activeTab === day ? "active" : ""}`}
+              onClick={() => setActiveTab(day)}
+            >
+              {day + weekDates[day]}
+            </button>
+          ))}
         </div>
-        <button className="hamburger" onClick={toggleMenu}>
-          ☰
-        </button>
-        <nav className={`navbar-menu ${isMenuOpen ? "open" : ""}`}>
-          <a href="/Segnapunti_10_vole.pdf" download>Download File Segnapunti</a>
-        </nav>
-      </header>
 
-      {/* Hero Section */}
-      <section className="hero">
-        <h1>Prenota Allenamento</h1>
-      </section>
+        <section className="booking-section">
+          <h2>Calendario prenotazioni del <strong>{activeTab.toUpperCase()}</strong></h2>
+          {data[activeTab].turni.map((turno) => (
+            <div key={turno.nome} className="turno-section">
+              <h3><strong>{turno.nome}</strong></h3>
+              <p>Posti disponibili: <strong>{postiRimasti(turno.posti, turno.prenotazioni.length)+"/"+turno.posti}</strong></p>
+              <p>Allenatore: <strong>{turno.allenatore}</strong></p>
+              <p>Stato: <strong>{turno.sospeso ? <font style={{color:"red"}}>Sospeso</font> : "Attivo"}</strong></p>
+              <div className="turno-controls">
+                {/* Toggle Suspension */}
+                <button
+                  className={`suspend-button ${turno.sospeso ? "resume" : "suspend"}`}
+                  onClick={() => handleSuspendToggle(activeTab, turno.nome)}
+                >
+                  {turno.sospeso ? "Riprendi Allenamento" : "Sospendi Allenamento"}
+                </button>
 
-      {/* Tabs Section */}
-      <div className="tabs">
-        {Object.keys(data).map((day) => (
-          <button
-            key={day}
-            className={`tab-button ${activeTab === day ? "active" : ""}`}
-            onClick={() => setActiveTab(day)}
-          >
-            {day + weekDates[day]}
-          </button>
-        ))}
+                {/* Update Available Spots */}
+                <div className="posti-controls">
+                  <div>
+                    <button
+                      onClick={() => handleUpdatePosti(activeTab, turno.nome, turno.posti - 1)}
+                      disabled={turno.posti <= 0}
+                    >
+                      -
+                    </button>
+                    <button
+                      onClick={() => handleUpdatePosti(activeTab, turno.nome, turno.posti + 1)}
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div>
+                    <button className="delete-subs"
+                      onClick={() => handleDeleteAllSubs(activeTab, turno.nome)}
+                    >
+                      Cancella Iscritti
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking Table */}
+              <table className="booking-table">
+                <thead>
+                  <tr>
+                    <th>Nome Arciere</th>
+                    <th>Turno</th>
+                    <th>Cancella Prenotazione</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {turno.prenotazioni.map((prenotazione) => (
+                    <tr key={prenotazione.nome}>
+                      <td>{prenotazione.nome}</td>
+                      <td>{prenotazione.turno}</td>
+                      <td>
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            handleDelete(activeTab, turno.nome, prenotazione.nome)
+                          }
+                        >
+                          X
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {turno.prenotazioni.length === 0 && (
+                <p className="no-data">Nessun iscritto per {turno.nome}.</p>
+              )}
+              <h2></h2>
+              <h2></h2>
+            </div>
+          ))}
+        </section>
+
+        {/* Form Section */}
+        <section className="form-section">
+          <h2>Prenota allenamento per <strong>{activeTab}</strong></h2>
+          <form className="booking-form">
+            <select
+              value={formInput.turno}
+              onChange={(e) => setFormInput({ ...formInput, turno: e.target.value })}
+            >
+              {data[activeTab].turni.map((turno) => (
+                <option key={turno.nome} value={turno.nome}>
+                  {turno.nome}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Inserisci il tuo nome"
+              value={formInput.nome}
+              onChange={(e) => setFormInput({ ...formInput, nome: e.target.value })}
+              required
+            />
+            <button type="submit" className="primary-button" onClick={handleFormSubmit}>
+              Invia
+            </button>
+          </form>
+        </section>
+
+        <section className="form-section">
+          <form className="booking-form">
+            <input
+                type="text"
+                placeholder="Inserisci il nome dell'allenatore"
+                value={formAllenatoreInput}
+                onChange={(e) => setFormAllenatoreInput(e.target.value)}
+                required
+              />
+            <button type="submit" className="primary-button" onClick={handleFormAllenatoreSubmit}>
+              Cambia Allenatore
+            </button>
+          </form>
+        </section>
+
+        {/* Footer */}
+        <footer>
+          <p>Arcieri Apollo Artemide Valconca</p>
+        </footer>
       </div>
-
-      {/* Booking Section */}
-      <section className="booking-section">
-        <h2>Prenotazioni del <strong>{activeTab.toUpperCase()}</strong></h2>
-        <table className="booking-table">
-          <thead>
-            <tr>
-              <th>Turno</th>
-              <th>Nome</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data[activeTab]["turni"][0]["prenotazioni"].map((person) => (
-              <tr key={person.turno}>
-                <td>{person.turno}</td>
-                <td>{person.nome}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {data[activeTab].length === 0 && (
-          <p className="no-data">Nessuna prenotazione disponibile per {activeTab}.</p>
-        )}
-      </section>
-
-      {/* Form Section */}
-      <section className="form-section">
-        <h2>Prenota allenamento per <strong>{activeTab}</strong></h2>
-        <form onSubmit={handleFormSubmit} className="booking-form">
-          <select
-            value={formInput.turno}
-            onChange={(e) => setFormInput({ ...formInput, turno: e.target.value })}
-          >
-            <option value="Primo Turno">Primo Turno</option>
-            <option value="Secondo Turno">Secondo Turno</option>
-          </select>
-          <input
-            type="text"
-            placeholder="Inserisci il tuo nome"
-            value={formInput.nome}
-            onChange={(e) => setFormInput({ ...formInput, nome: e.target.value })}
-            required
-          />
-          <button type="submit" className="primary-button">
-            Invia
+    );
+  }
+  else {
+    return (
+      <div className="App">
+        {/* Navbar */}
+        <header className="navbar">
+          <div className="navbar-left">
+            <img src={logo} alt="Logo" className="navbar-logo" />
+            <div className="logo-text">Arcieri Valconca</div>
+          </div>
+          <button className="hamburger" onClick={toggleMenu}>
+            ☰
           </button>
-        </form>
-      </section>
+          <nav className={`navbar-menu ${isMenuOpen ? "open" : ""}`}>
+            <a href="Segnapunti_10_vole.pdf" download="Segnapunti_10_vole.pdf">Download File Segnapunti</a>
+          </nav>
+        </header>
 
-      {/* Footer */}
-      <footer>
-        <p>Arcieri Apollo Artemide Valconca</p>
-      </footer>
-    </div>
-  );
+        {/* Hero Section */}
+        <section className="hero">
+          <h1>Prenota Allenamento</h1>
+          <div className="schedule">
+            <div className="line">
+              <span className="day"><strong>Lunedì</strong>:</span>
+              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
+            </div>
+            <div className="line">
+              <span className="day"><strong>Mercoledì</strong>:</span>
+              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
+            </div>
+            <div className="line">
+              <span className="day"><strong>Giovedì</strong>:</span>
+              <span className="details">Turno Unico [20:00 - 21:30]</span>
+            </div>
+            <div className="line">
+              <span className="day"><strong>Sabato</strong>:</span>
+              <span className="details">Primo Turno [15:30 - 17:00], Secondo Turno [17:00 - 18:30]</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Tabs Section */}
+        <div className="tabs">
+          {Object.keys(data).map((day) => (
+            <button
+              key={day}
+              className={`tab-button ${activeTab === day ? "active" : ""}`}
+              onClick={() => setActiveTab(day)}
+            >
+              {day + weekDates[day]}
+            </button>
+          ))}
+        </div>
+
+        <section className="booking-section">
+          <h2>Calendario prenotazioni del <strong>{activeTab.toUpperCase()}</strong></h2>
+          {data[activeTab].turni.map((turno) => (
+            <div key={turno.nome} className="turno-section">
+              <h3><strong>{turno.nome}</strong></h3>
+              <p>Posti disponibili: <strong>{postiRimasti(turno.posti, turno.prenotazioni.length)+"/"+turno.posti}</strong></p>
+              <p>Allenatore: <strong>{turno.allenatore}</strong></p>
+              <p>Stato: <strong>{turno.sospeso ? <font style={{color:"red"}}>Sospeso</font> : "Attivo"}</strong></p>
+
+              {/* Booking Table */}
+              <table className="booking-table">
+                <thead>
+                  <tr>
+                    <th>Nome Arciere</th>
+                    <th>Turno</th>
+                    <th>Cancella Prenotazione</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {turno.prenotazioni.map((prenotazione) => (
+                    <tr key={prenotazione.nome}>
+                      <td>{prenotazione.nome}</td>
+                      <td>{prenotazione.turno}</td>
+                      <td>
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            handleDelete(activeTab, turno.nome, prenotazione.nome)
+                          }
+                        >
+                          X
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {turno.prenotazioni.length === 0 && (
+                <p className="no-data">Nessun iscritto per {turno.nome}.</p>
+              )}
+              <h2></h2>
+              <h2></h2>
+            </div>
+          ))}
+        </section>
+
+        {/* Form Section */}
+        <section className="form-section">
+          <h2>Prenota allenamento per <strong>{activeTab}</strong></h2>
+          <form className="booking-form">
+            <select
+              value={formInput.turno}
+              onChange={(e) => setFormInput({ ...formInput, turno: e.target.value })}
+            >
+              {data[activeTab].turni.map((turno) => (
+                <option key={turno.nome} value={turno.nome}>
+                  {turno.nome}
+                </option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Inserisci il tuo nome"
+              value={formInput.nome}
+              onChange={(e) => setFormInput({ ...formInput, nome: e.target.value })}
+              required
+            />
+            <button type="submit" className="primary-button" onClick={handleFormSubmit}>
+              Invia
+            </button>
+          </form>
+        </section>
+
+        {/* Footer */}
+        <footer>
+          <p>Arcieri Apollo Artemide Valconca</p>
+        </footer>
+      </div>
+    );
+  }
 }
 
 export default App;
-
-//
-//const initialData = {
-//  Monday: [{ id: 1, name: "Alice Johnson" }, { id: 2, name: "John Smith" }],
-//  Wednesday: [{ id: 3, name: "Sophie Turner" }, { id: 4, name: "Michael Brown" }],
-//  Thursday: [{ id: 5, name: "Emma Wilson" }, { id: 6, name: "Chris Evans" }],
-//  Saturday: [{ id: 7, name: "Robert Downey" }, { id: 8, name: "Natasha Romanoff" }],
-//};
-//
-
-//
-
-//
-//async function fetchGiorniDocument() {
-//  // Define a reference to the document
-//  const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
-//
-//  // Fetch the document
-//  try {
-//    const docSnap = await getDoc(docRef);
-//    if (docSnap.exists()) {
-//      console.log("Document data:", docSnap.data());
-//      return JSON.parse(docSnap.data().campo).lista; // Document data
-//    } else {
-//      console.log("No such document!");
-//      return null;
-//    }
-//  } catch (error) {
-//    console.error("Error getting document:", error);
-//    return null;
-//  }
-//}
-//
-//
-//
-//
-////////JSON.parse(docSnap)
-//// Function to update the shared state in Firestore
-////const updateSharedState = async (newValue) => {
-////  try {
-////    await setDoc(doc(db, "sharedStateCollection", "sharedStateDocument"), {
-////      value: newValue,
-////    });
-////    console.log("Shared state updated!");
-////  } catch (error) {
-////    console.error("Error updating shared state: ", error);
-////  }
-////};
-
-//
-//
-//
-//const CalendarioPrenotazione = () => {
-//
-//  const [data, setData] = useState(initialData);
-//  const [activeTab, setActiveTab] = useState("Monday");
-//  const [formInput, setFormInput] = useState({ name: "" });
-//
-//  const handleFormSubmit = (e) => {
-//    e.preventDefault();
-//    if (formInput.name.trim() === "") return;
-//
-//    const newBooking = {
-//      id: data[activeTab].length + 1,
-//      name: formInput.name,
-//    };
-//
-//    setData((prevData) => ({
-//      ...prevData,
-//      [activeTab]: [...prevData[activeTab], newBooking],
-//    }));
-//
-//    setFormInput({ name: "" });
-//  };
-//
-//  const [giorni, setGiorni] = useState();
-//
-//  const [giorniData, setGiorniData] = useState(null);
-//
-//  useEffect(() => {
-//    const fetchData = async () => {
-//      const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
-//
-//        const docSnap = await getDoc(docRef);
-//        if (docSnap.exists()) {
-//          setGiorni(JSON.parse(docSnap.data().campo).lista);
-//          setGiorniData(JSON.parse(docSnap.data().campo).lista);
-//        } else {
-//          console.log("No such document!");
-//        }
-//
-//    };
-//
-//    fetchData();
-//  }, []);
-//
-////  useEffect(() => {
-////    // Fetch the document on component mount
-////    const fetchData = async () => {
-////      const docRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
-////      const docSnap = await getDoc(docRef);
-////      if (docSnap.exists()) {
-////        setGiorni(docSnap.data()); // Store document data in state
-////        localStorage.setItem("state:lol", docSnap.data());
-////      } else {
-////        console.log("No such document!");
-////      }
-////
-////    };
-////
-////    fetchData();
-////  }, []);
-//
-//
-//  const [nome, setNome] = useState("");
-//  const [giornoSelezionato, setGiornoSelezionato] = useState("");
-//  const [turnoSelezionato, setTurnoSelezionato] = useState("");
-//
-//  const giorniRef = doc(db, 'giorni', '5h6XEaykZl2USUmmcb6U');
-//
-//  const handlePrenotazione = (event) => {
-//    event.preventDefault();
-//    if (nome && giornoSelezionato && turnoSelezionato) {
-//      const giorno = giorni.find((g) => g.nome === giornoSelezionato);
-//      if (giorno) {
-//        const turno = giorno.turni.find((t) => t.nome === turnoSelezionato);
-//        if (turno) {
-//          if (turno.prenotazioni.length < turno.posti && !turno.sospeso) {
-//            turno.prenotazioni.push({
-//              nome,
-//              giorno: giornoSelezionato,
-//              turno: turnoSelezionato,
-//            });
-//            setGiorni([...giorni]);
-//            updateGiorniDocument(giorni);
-//            setNome("");
-//          } else if (turno.sospeso) {
-//            alert("Allenamento sospeso!");
-//          } else {
-//            alert("Posti esauriti!");
-//          }
-//        }
-//      }
-//    }
-//  };
-//
-//  const handleCancellazione = (
-//    giornoNome: string,
-//    turnoNome: string,
-//    prenotazioneNome: string,
-//    index: number
-//  ) => {
-//    const isConfirmed = window.confirm(
-//      "Sei sicuro di voler CANCELLARE la prenotazione?"
-//    );
-//    if (isConfirmed) {
-//      const giorno = giorni.find((g) => g.nome === giornoNome);
-//      if (giorno) {
-//        const turno = giorno.turni.find((t) => t.nome === turnoNome);
-//        if (turno) {
-//          turno.prenotazioni.splice(index, 1);
-//          setGiorni([...giorni]);
-//        }
-//      }
-//    }
-//  };
-//
-//  const handleSospensione = (giornoNome: string, turnoNome: string) => {
-//    const enteredPassword = window.prompt(
-//      "Inserisci la password per sospendere l'allenamento:"
-//    );
-//
-//    if (enteredPassword === password) {
-//      const giorno = giorni.find((g) => g.nome === giornoNome);
-//      if (giorno) {
-//        const turno = giorno.turni.find((t) => t.nome === turnoNome);
-//        if (turno) {
-//          turno.sospeso = !turno.sospeso;
-//          setGiorni([...giorni]);
-//        }
-//      }
-//    } else {
-//      alert("Password sbagliata, impossibile procedere");
-//    }
-//  };
-//
-//  const handleAggiungiPosti = (giornoNome: string, turnoNome: string) => {
-//    const enteredPassword = window.prompt(
-//      "Inserisci la password per aggiungere posti:"
-//    );
-//
-//    if (enteredPassword === password) {
-//      const giorno = giorni.find((g) => g.nome === giornoNome);
-//      if (giorno) {
-//        const turno = giorno.turni.find((t) => t.nome === turnoNome);
-//        if (turno) {
-//          turno.posti++;
-//          setGiorni([...giorni]);
-//        }
-//      }
-//    } else {
-//      alert("Password sbagliata, impossibile procedere");
-//    }
-//  };
-//
-//  const handleDiminuisciPosti = (giornoNome: string, turnoNome: string) => {
-//    const enteredPassword = window.prompt(
-//      "Inserisci la password per diminuire i posti:"
-//    );
-//
-//    if (enteredPassword === password) {
-//      const giorno = giorni.find((g) => g.nome === giornoNome);
-//      if (giorno) {
-//        const turno = giorno.turni.find((t) => t.nome === turnoNome);
-//        if (turno) {
-//          if (turno.posti > turno.prenotazioni.length) {
-//            turno.posti--;
-//            setGiorni([...giorni]);
-//          } else {
-//            alert("Impossibile diminuire i posti!");
-//          }
-//        }
-//      }
-//    } else {
-//      alert("Password sbagliata, impossibile procedere");
-//    }
-//  };
-//
-//  return (
-//    <div className="App">
-//      {/* Navbar */}
-//      <header className="navbar">
-//        <div className="navbar-left">
-//
-//          <div className="logo">Calendario Prenotazioni</div>
-//        </div>
-//        <nav>
-//          <a href="#">Home</a>
-//          <a href="#">Courses</a>
-//          <a href="#">Bookings</a>
-//          <a href="#">Profile</a>
-//        </nav>
-//      </header>
-//
-//      {/* Hero Section */}
-//      <section className="hero">
-//        <h1>Prenota l allenamento</h1>
-//        <button className="primary-button">Get Started</button>
-//      </section>
-//
-//      {/* Form Section */}
-//      <section className="form-section">
-//        <h2>Book a Session for {activeTab}</h2>
-//        <form onSubmit={handleFormSubmit} className="booking-form">
-//          <input
-//            type="text"
-//            placeholder="Enter your name"
-//            value={formInput.name}
-//            onChange={(e) => setFormInput({ ...formInput, name: e.target.value })}
-//            required
-//          />
-//          <button type="submit" className="primary-button">
-//            Submit
-//          </button>
-//        </form>
-//      </section>
-//
-//      {/* Tabs Section */}
-//      <div className="tabs">
-//        {Object.keys(data).map((day) => (
-//          <button
-//            key={day}
-//            className={`tab-button ${activeTab === day ? "active" : ""}`}
-//            onClick={() => setActiveTab(day)}
-//          >
-//            {day}
-//          </button>
-//        ))}
-//      </div>
-//
-//      {/* Booking Section */}
-//      <section className="booking-section">
-//        <h2>{activeTab} Prenotazioni</h2>
-//        <table className="booking-table">
-//          <thead>
-//            <tr>
-//              <th>Id</th>
-//              <th>Nome</th>
-//            </tr>
-//          </thead>
-//          <tbody>
-//            {data[activeTab].map((person) => (
-//              <tr key={person.id}>
-//                <td>{person.id}</td>
-//                <td>{person.name}</td>
-//              </tr>
-//            ))}
-//          </tbody>
-//        </table>
-//        {data[activeTab].length === 0 && (
-//          <p className="no-data">No bookings available for {activeTab}.</p>
-//        )}
-//      </section>
-//
-//      {/* Footer */}
-//      <footer>
-//        <p>© Arcieri Apollo Artemide Valconca. All rights reserved.</p>
-//      </footer>
-//    </div>
-//  );
-//};
-//
-//export default CalendarioPrenotazione;
-//
-//
-//
-////import logo from './logo.svg';
-////import './App.css';
-////
-////function App() {
-////  return (
-////    <div className="App">
-////      <header className="App-header">
-////        <img src={logo} className="App-logo" alt="logo" />
-////        <p>
-////          Edit <code>src/App.js</code> and save to reload.
-////        </p>
-////        <a
-////          className="App-link"
-////          href="https://reactjs.org"
-////          target="_blank"
-////          rel="noopener noreferrer"
-////        >
-////          Learn React
-////        </a>
-////      </header>
-////    </div>
-////  );
-////}
-////
-////export default App;
-//
-////
-////
-////
-////
-////<div className="App container mx-auto p-4 bg-orange-100 rounded-2xl shadow-2xl">
-////      <h1 className="text-3xl font-bold mb-4 text-black">
-////        Calendario Prenotazione
-////      </h1>
-////      <div className="flex flex-col md:flex-row justify-center mb-4">
-////        <select
-////          className="block w-full md:w-1/3 p-2 mb-4 md:mb-0 bg-white rounded"
-////          value={giornoSelezionato}
-////          onChange={(e) => setGiornoSelezionato(e.target.value)}
-////        >
-////          <option value="">Seleziona giorno</option>
-////          {Array.isArray(giorni) && giorni.map((giorno) => (
-////            <option key={giorno.nome} value={giorno.nome}>
-////              {giorno.nome}
-////            </option>
-////          ))}
-////        </select>
-////        <select
-////          className="block w-full md:w-1/3 p-2 mb-4 md:mb-0 bg-white rounded"
-////          value={turnoSelezionato}
-////          onChange={(e) => setTurnoSelezionato(e.target.value)}
-////        >
-////          <option value="">Seleziona turno</option>
-////          {Array.isArray(giorni) && giorni
-////            .find((g) => g.nome === giornoSelezionato)
-////            ?.turni.map((turno) => (
-////              <option key={turno.nome} value={turno.nome}>
-////                {turno.nome}
-////              </option>
-////            ))}
-////        </select>
-////        <input
-////          className="block w-full md:w-1/3 p-2 mb-4 md:mb-0 bg-white rounded"
-////          type="text"
-////          value={nome}
-////          onChange={(e) => setNome(e.target.value)}
-////          placeholder="Inserisci nome"
-////        />
-////        <button
-////          className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-////          onClick={handlePrenotazione}
-////        >
-////          Prenota
-////        </button>
-////      </div>
-////      <div className="flex flex-col">
-////        {Array.isArray(giorni) && giorni.map((giorno) => (
-////          <div key={giorno.nome} className="mb-4 bg-white rounded p-4">
-////            <h2 className="text-2xl font-bold">{giorno.nome}</h2>
-////            {Array.isArray(giorni) && giorno.turni.map((turno) => (
-////              <div key={turno.nome} className="mb-4">
-////                <h3 className="text-xl font-bold">{turno.nome}</h3>
-////                {turno.sospeso ? (
-////                  <p className="text-lg text-red-500">Allenamento sospeso</p>
-////                ) : (
-////                  <p className="text-lg">
-////                    Posti liberi: {turno.posti - turno.prenotazioni.length}
-////                  </p>
-////                )}
-////                <button
-////                  className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded"
-////                  onClick={() => handleSospensione(giorno.nome, turno.nome)}
-////                >
-////                  {turno.sospeso ? "Riprendi" : "Sospendi"}
-////                </button>
-////                <button
-////                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-////                  onClick={() => handleAggiungiPosti(giorno.nome, turno.nome)}
-////                >
-////                  <Plus className="w-4 h-4" />
-////                </button>
-////                <button
-////                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-////                  onClick={() => handleDiminuisciPosti(giorno.nome, turno.nome)}
-////                >
-////                  <Minus className="w-4 h-4" />
-////                </button>
-////                <ul>
-////                  {Array.isArray(giorni) && turno.prenotazioni.map((prenotazione, index) => (
-////                    <li key={index} className="flex justify-between">
-////                      <span>{prenotazione.nome}</span>
-////                      <button
-////                        className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-////                        onClick={() =>
-////                          handleCancellazione(
-////                            giorno.nome,
-////                            turno.nome,
-////                            prenotazione.nome,
-////                            index
-////                          )
-////                        }
-////                      >
-////                        <X className="w-4 h-4" />
-////                      </button>
-////                    </li>
-////                  ))}
-////                </ul>
-////              </div>
-////            ))}
-////          </div>
-////        ))}
-////      </div>
-////    </div>
