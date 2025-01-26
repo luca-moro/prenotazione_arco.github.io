@@ -66,7 +66,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #333;
+  background-color: rgba(0, 0, 0, 0.7);
   padding: 10px 20px;
   color: white;
 }
@@ -109,7 +109,7 @@ nav a:hover {
 
 .hamburger {
   display: none;
-  background: none;
+  background: rgba(0, 0, 0, 0.7);
   border: none;
   font-size: 24px;
   color: white;
@@ -121,7 +121,7 @@ nav a:hover {
   .navbar-menu {
     display: none;
     flex-direction: column;
-    background-color: #4caf50;
+    background-color: rgba(0, 0, 0, 0.9);
     position: absolute;
     top: 60px;
     right: 0;
@@ -136,6 +136,7 @@ nav a:hover {
 
   .hamburger {
     display: block;
+    background-color: rgba(0, 0, 0, 0.9);
   }
 }
 
@@ -191,7 +192,7 @@ nav a:hover {
 .tabs {
   display: flex;
   justify-content: center;
-  background: white;
+  background-color: rgba(0, 0, 0, 0.7);
   padding: 10px 0;
 }
 
@@ -201,7 +202,7 @@ nav a:hover {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  color: #333;
+  color: white;
 }
 
 .tab-button.active {
@@ -210,14 +211,14 @@ nav a:hover {
 }
 
 .tab-button:hover {
-  color: #4caf50;
+  color: #f6a200;
 }
 
 /* Booking Section */
 .booking-section {
   width: 90%;
   margin: 5px auto;
-  background: white;
+  background-color: #f6a200;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
   border-radius: 10px;
@@ -235,7 +236,7 @@ nav a:hover {
 .booking-table th {
   text-align: center;
   padding: 10px;
-  border-bottom: 2px solid #ddd;
+  border-bottom: 2px solid #f6a200;
 }
 
 .sorting-th:hover {
@@ -244,17 +245,17 @@ nav a:hover {
 }
 
 .booking-table td {
-  border: 1px solid #ddd;
+  border: 1px solid #f6a200;
   padding: 8px;
 }
 
 .booking-table th {
-  background-color: #4caf50;
+  background-color: black;
   color: white;
 }
 
 .no-data {
-  color: #999;
+  color: black;
 }
 
 .delete-button {
@@ -275,7 +276,7 @@ nav a:hover {
 .form-section {
   width: 90%;
   margin: 5px auto;
-  background: white;
+  background: #f6a200;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
   border-radius: 10px;
@@ -383,7 +384,7 @@ nav a:hover {
 
 /* Footer */
 footer {
-  background: #333;
+  background: rgba(0, 0, 0, 0.7);
   color: white;
   padding: 10px 0;
   text-align: center;

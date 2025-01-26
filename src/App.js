@@ -7,6 +7,7 @@ import { getDatabase, ref, onValue, set, push } from 'firebase/database';
 import React from "react";
 import "./App.css";
 import logo from "./logo192.png"; // Import the logo image
+import arcoImage from "./arco.jpg"
 
 const firebaseConfig = {
   apiKey: "AIzaSyARiqtsVR7cmX6iU3cD0P7LvvWfp4zv4To",
@@ -473,7 +474,11 @@ function App() {
   }
   else if (isAdmin) {
     return (
-      <div className="App">
+      <div className="App" style={{
+        backgroundImage: `url(${arcoImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center"}}
+        >
         {/* Navbar */}
         <header className="navbar">
           <div className="navbar-left">
@@ -487,29 +492,6 @@ function App() {
             <a href="Segnapunti_10_vole.pdf" download="Segnapunti_10_vole.pdf">Download File Segnapunti</a>
           </nav>
         </header>
-
-        {/* Hero Section */}
-        <section className="hero">
-          <h1>Prenota Allenamento</h1>
-          <div className="schedule">
-            <div className="line">
-              <span className="day"><strong>Lunedì</strong>:</span>
-              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
-            </div>
-            <div className="line">
-              <span className="day"><strong>Mercoledì</strong>:</span>
-              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
-            </div>
-            <div className="line">
-              <span className="day"><strong>Giovedì</strong>:</span>
-              <span className="details">Turno Unico [20:00 - 21:30]</span>
-            </div>
-            <div className="line">
-              <span className="day"><strong>Sabato</strong>:</span>
-              <span className="details">Primo Turno [15:30 - 17:00], Secondo Turno [17:00 - 18:30]</span>
-            </div>
-          </div>
-        </section>
 
         {/* Tabs Section */}
         <div className="tabs">
@@ -654,7 +636,11 @@ function App() {
   }
   else {
     return (
-      <div className="App">
+      <div className="App" style={{
+        backgroundImage: `url(${arcoImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center"}}
+        >
         {/* Navbar */}
         <header className="navbar">
           <div className="navbar-left">
@@ -666,31 +652,10 @@ function App() {
           </button>
           <nav className={`navbar-menu ${isMenuOpen ? "open" : ""}`}>
             <a href="Segnapunti_10_vole.pdf" download="Segnapunti_10_vole.pdf">Download File Segnapunti</a>
+            <a href="https://docs.google.com/spreadsheets/d/11_P5Tp79USRnDzy4NDw_2u3zsvyeaU33LsEISs46uKs/edit?gid=0#gid=0" target="_blank">Calendario Tecnici</a>
+            <a href="https://docs.google.com/spreadsheets/d/1eO8TQW-4I0wmI7VCpdxiNsQRAAzB5lsx/edit?gid=1333899302#gid=1333899302" target="_blank">File Gare</a>
           </nav>
         </header>
-
-        {/* Hero Section */}
-        <section className="hero">
-          <h1>Prenota Allenamento</h1>
-          <div className="schedule">
-            <div className="line">
-              <span className="day"><strong>Lunedì</strong>:</span>
-              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
-            </div>
-            <div className="line">
-              <span className="day"><strong>Mercoledì</strong>:</span>
-              <span className="details">Primo Turno [18:30 - 20:00], Secondo Turno [20:00 - 21:30]</span>
-            </div>
-            <div className="line">
-              <span className="day"><strong>Giovedì</strong>:</span>
-              <span className="details">Turno Unico [20:00 - 21:30]</span>
-            </div>
-            <div className="line">
-              <span className="day"><strong>Sabato</strong>:</span>
-              <span className="details">Primo Turno [15:30 - 17:00], Secondo Turno [17:00 - 18:30]</span>
-            </div>
-          </div>
-        </section>
 
         {/* Tabs Section */}
         <div className="tabs">
