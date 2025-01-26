@@ -3,9 +3,11 @@
 # dependencies
 /.pnp
 .pnp.js
+/.idea
 
 # testing
 /coverage
+/node_modules
 
 # production
 /build
